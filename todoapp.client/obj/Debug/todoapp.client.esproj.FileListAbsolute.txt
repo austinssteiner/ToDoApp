@@ -1,0 +1,2 @@
+C:\Users\victo\source\repos\AWARE_Desktop\backend\ToDoApp\todoapp.client\obj\Debug\todoapp.client.esproj.CoreCompileInputs.cache
+C:\Users\victo\source\repos\ToDoApp\todoapp.client\obj\Debug\todoapp.client.esproj.CoreCompileInputs.cache

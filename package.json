@@ -1,0 +1,16 @@
+{
+  "name": "todoapp",
+  "version": "1.0.0",
+  "description": "ToDo App - Full Stack Application",
+  "scripts": {
+    "dev:server": "cd ToDoApp.Server && dotnet run --launch-profile http-noproxy",
+    "dev:client": "cd todoapp.client && npm run dev",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "build:client": "cd todoapp.client && npm run build",
+    "install:client": "cd todoapp.client && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
+
