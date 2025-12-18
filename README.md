@@ -2,7 +2,7 @@
 
 A full-stack task management application built with .NET Core (backend) and React (frontend). This application demonstrates clean architecture, proper separation of concerns, and production-ready patterns.
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -65,7 +65,7 @@ On first run, an admin account is automatically created:
 - **Username:** `admin`
 - **Password:** `admin123`
 
-## 🏗️ Architecture
+## Architecture
 
 ### Backend (.NET Core)
 
@@ -96,7 +96,7 @@ On first run, an admin account is automatically created:
 - `services/` - API service layer
 - React Query for data fetching, caching, and synchronization
 
-## 📋 Features
+## Features
 
 - ✅ User authentication (login)
 - ✅ Task management (create, read, update, delete)
@@ -120,7 +120,7 @@ The test suite includes integration tests for the Tasks API endpoints, covering:
 - Task retrieval
 - Error scenarios (404, etc.)
 
-## 📝 API Documentation
+## API Documentation
 
 ### Swagger UI
 
@@ -162,7 +162,7 @@ Migrations are automatically applied on application startup.
 
 SQLite database file: `ToDoApp.Server/todoapp.db`
 
-## 🎯 Assumptions & Design Decisions
+## Assumptions & Design Decisions
 
 ### Assumptions
 
@@ -227,7 +227,7 @@ If given more time, the following features would be prioritized:
    - Task attachments
 
 4. **Better Error Handling:**
-   - Structured logging (Serilog)
+   - Structured logging
    - Request/response logging middleware
    - Error tracking (Sentry, Application Insights)
 
@@ -243,7 +243,7 @@ If given more time, the following features would be prioritized:
    - More comprehensive integration tests
    - Unit tests for handlers
    - Frontend component tests
-   - E2E tests (Playwright/Cypress)
+   - E2E tests
 
 7. **Documentation:**
    - More detailed XML comments
@@ -281,13 +281,13 @@ If given more time, the following features would be prioritized:
 
 ### Scaling Strategies
 
-1. **Database:** Migrate to PostgreSQL with connection pooling
+1. **Database:** Migrate to PostgreSQL or SQL Server to allow for concurrent reads and writes
 2. **Caching:** Implement Redis for frequently accessed data
 3. **API:** Add API Gateway with rate limiting
 4. **Frontend:** Implement CDN for static assets
 5. **Monitoring:** Add Application Performance Monitoring (APM)
 
-## 🔒 Security Considerations
+## Security Considerations
 
 ### Current Implementation
 
@@ -306,7 +306,7 @@ If given more time, the following features would be prioritized:
 - Content Security Policy (CSP) headers
 - Security headers (HSTS, X-Frame-Options, etc.)
 
-## 📦 Project Structure
+## Project Structure
 
 ```
 ToDoApp/
@@ -326,31 +326,3 @@ ToDoApp/
 ├── ToDoApp.Server.Tests/    # Integration tests
 └── README.md                # This file
 ```
-
-## 🤝 Contributing
-
-This is a coding challenge submission. For production use, consider:
-- Adding comprehensive test coverage
-- Implementing proper authentication/authorization
-- Adding CI/CD pipeline
-- Setting up monitoring and logging
-- Following semantic versioning
-
-## 📄 License
-
-This project is a coding challenge submission.
-
-## 🙏 Acknowledgments
-
-- Built with .NET Core and React
-- Uses MediatR for CQRS pattern
-- React Query for state management
-- EF Core for data access
-
----
-
-**Note:** This application is designed as a production MVP demonstration. For production deployment, implement the "What Would Be Implemented Next" features, especially authentication, pagination, and proper logging.
-
-
-
-
