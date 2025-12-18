@@ -33,9 +33,9 @@ public class UpdateTaskHandler : IRequestHandler<UpdateTaskRequest, UpdateTaskRe
             task.Description = request.Description;
         }
 
-        if (request.CompletedDate.HasValue)
+        if (request.CompletedDateProvided)
         {
-            task.CompletedDate = request.CompletedDate.Value;
+            task.CompletedDate = request.CompletedDate;
         }
 
         await _context.SaveChangesAsync(cancellationToken);
@@ -51,4 +51,3 @@ public class UpdateTaskHandler : IRequestHandler<UpdateTaskRequest, UpdateTaskRe
         };
     }
 }
-

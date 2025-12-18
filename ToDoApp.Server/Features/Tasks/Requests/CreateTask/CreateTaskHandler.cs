@@ -41,6 +41,7 @@ public class CreateTaskHandler : IRequestHandler<CreateTaskRequest, CreateTaskRe
             UserId = task.UserId,
             TaskName = task.TaskName,
             Description = task.Description,
+            CompletedDate = task.CompletedDate,
             CreatedDate = task.CreatedDate
         };
     }

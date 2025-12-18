@@ -270,3 +270,6 @@ C:\Users\victo\source\repos\ToDoApp\ToDoApp.Server\obj\Debug\net8.0\refint\ToDoA
 C:\Users\victo\source\repos\ToDoApp\ToDoApp.Server\obj\Debug\net8.0\ToDoApp.Server.pdb
 C:\Users\victo\source\repos\ToDoApp\ToDoApp.Server\obj\Debug\net8.0\ToDoApp.Server.genruntimeconfig.cache
 C:\Users\victo\source\repos\ToDoApp\ToDoApp.Server\obj\Debug\net8.0\ref\ToDoApp.Server.dll
+C:\Users\victo\source\repos\ToDoApp\ToDoApp.Server\obj\Debug\net8.0\ToDoApp.Server.sourcelink.json
+C:\Users\victo\source\repos\ToDoApp\ToDoApp.Server\bin\Debug\net8.0\ToDoApp.Server.xml
+C:\Users\victo\source\repos\ToDoApp\ToDoApp.Server\obj\Debug\net8.0\ToDoApp.Server.xml

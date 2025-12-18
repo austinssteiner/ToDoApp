@@ -33,6 +33,35 @@ export const api = {
   },
 
   // Tasks
+  async getTasks(userId) {
+    const response = await fetch(`${API_BASE_URL}/tasks/user/${userId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch tasks');
+    }
+    const data = await response.json();
+    return data.tasks || [];
+  },
+
+  async getTask(taskId) {
+    const response = await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch task');
+    }
+    return response.json();
+  },
+
   async createTask(taskData) {
     const response = await fetch(`${API_BASE_URL}/tasks`, {
       method: 'POST',

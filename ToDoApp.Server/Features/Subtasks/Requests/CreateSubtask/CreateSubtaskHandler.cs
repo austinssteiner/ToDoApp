@@ -39,6 +39,7 @@ public class CreateSubtaskHandler : IRequestHandler<CreateSubtaskRequest, Create
             SubtaskId = subtask.SubtaskId,
             TaskId = subtask.TaskId,
             Description = subtask.Description,
+            CompletedDate = subtask.CompletedDate,
             CreatedDate = subtask.CreatedDate
         };
     }

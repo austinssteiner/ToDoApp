@@ -7,9 +7,6 @@ public static class DatabaseSeeder
 {
     public static async System.Threading.Tasks.Task SeedAsync(ToDoAppDbContext context)
     {
-        // Ensure database is created
-        await context.Database.EnsureCreatedAsync();
-
         // Check if admin user already exists
         var adminExists = await context.Users
             .AnyAsync(u => u.Username == "admin");

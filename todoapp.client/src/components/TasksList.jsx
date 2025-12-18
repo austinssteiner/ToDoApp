@@ -1,51 +1,41 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import TaskForm from './TaskForm';
 import TaskDetail from './TaskDetail';
 import ConfirmModal from './ConfirmModal';
 
 export default function TasksList({ user }) {
-  const [tasks, setTasks] = useState([]);
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [showDeleteTaskModal, setShowDeleteTaskModal] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const queryClient = useQueryClient();
 
-  // For now, we'll store tasks in localStorage since we don't have a GET endpoint
-  // In a real app, you'd fetch tasks from the API
-  useEffect(() => {
-    const savedTasks = localStorage.getItem(`tasks_${user.userId}`);
-    if (savedTasks) {
-      setTasks(JSON.parse(savedTasks));
-    }
-  }, [user.userId]);
+  // Fetch tasks using React Query
+  const { data: tasks = [], isLoading: initialLoading, error } = useQuery({
+    queryKey: ['tasks', user.userId],
+    queryFn: () => api.getTasks(user.userId),
+    enabled: !!user?.userId,
+  });
 
-  const saveTasksToStorage = (newTasks) => {
-    setTasks(newTasks);
-    localStorage.setItem(`tasks_${user.userId}`, JSON.stringify(newTasks));
-  };
-
-  const handleCreateTask = async (taskData) => {
-    setError('');
-    setLoading(true);
-    try {
-      const newTask = await api.createTask({
-        userId: user.userId,
-        taskName: taskData.taskName,
-        description: taskData.description,
-        createdBy: user.userId,
-      });
-      
-      const updatedTasks = [...tasks, newTask];
-      saveTasksToStorage(updatedTasks);
+  // Create task mutation
+  const createTaskMutation = useMutation({
+    mutationFn: (taskData) => api.createTask({
+      userId: user.userId,
+      taskName: taskData.taskName,
+      description: taskData.description,
+      createdBy: user.userId,
+    }),
+    onSuccess: () => {
+      // Invalidate and refetch tasks
+      queryClient.invalidateQueries({ queryKey: ['tasks', user.userId] });
       setShowTaskForm(false);
-    } catch (err) {
-      setError(err.message || 'Failed to create task');
-    } finally {
-      setLoading(false);
-    }
+    },
+  });
+
+  const handleCreateTask = (taskData) => {
+    createTaskMutation.mutate(taskData);
   };
 
   const handleTaskClick = (task) => {
@@ -56,12 +46,17 @@ export default function TasksList({ user }) {
     setSelectedTask(null);
   };
 
-  const handleTaskUpdate = (updatedTask) => {
-    const updatedTasks = tasks.map(t => 
-      t.taskId === updatedTask.taskId ? updatedTask : t
-    );
-    saveTasksToStorage(updatedTasks);
-    setSelectedTask(updatedTask);
+  const handleTaskUpdate = async (updatedTask) => {
+    // Invalidate both task detail and tasks list queries
+    queryClient.invalidateQueries({ queryKey: ['task', updatedTask.taskId] });
+    queryClient.invalidateQueries({ queryKey: ['tasks', user.userId] });
+    
+    // Refetch the updated task to get latest data including subtasks
+    const fetchedTask = await queryClient.fetchQuery({
+      queryKey: ['task', updatedTask.taskId],
+      queryFn: () => api.getTask(updatedTask.taskId),
+    });
+    setSelectedTask(fetchedTask);
   };
 
   const handleTaskDeleteClick = (taskId) => {
@@ -69,25 +64,25 @@ export default function TasksList({ user }) {
     setShowDeleteTaskModal(true);
   };
 
-  const handleConfirmDeleteTask = async () => {
-    if (!taskToDelete) return;
-
-    setError('');
-    setLoading(true);
-    try {
-      await api.deleteTask(taskToDelete);
-      const updatedTasks = tasks.filter(t => t.taskId !== taskToDelete);
-      saveTasksToStorage(updatedTasks);
+  // Delete task mutation
+  const deleteTaskMutation = useMutation({
+    mutationFn: (taskId) => api.deleteTask(taskId),
+    onSuccess: () => {
+      // Invalidate tasks list
+      queryClient.invalidateQueries({ queryKey: ['tasks', user.userId] });
+      // Invalidate task detail if it was the deleted task
       if (selectedTask?.taskId === taskToDelete) {
+        queryClient.invalidateQueries({ queryKey: ['task', taskToDelete] });
         setSelectedTask(null);
       }
       setShowDeleteTaskModal(false);
       setTaskToDelete(null);
-    } catch (err) {
-      setError(err.message || 'Failed to delete task');
-    } finally {
-      setLoading(false);
-    }
+    },
+  });
+
+  const handleConfirmDeleteTask = () => {
+    if (!taskToDelete) return;
+    deleteTaskMutation.mutate(taskToDelete);
   };
 
   if (selectedTask) {
@@ -114,22 +109,31 @@ export default function TasksList({ user }) {
         </button>
       </div>
 
-      {error && <div className="error-message">{error}</div>}
+      {(error || createTaskMutation.error || deleteTaskMutation.error) && (
+        <div className="error-message">
+          {error?.message || createTaskMutation.error?.message || deleteTaskMutation.error?.message || 'An error occurred'}
+        </div>
+      )}
 
       {showTaskForm && (
         <TaskForm
           onSubmit={handleCreateTask}
           onCancel={() => setShowTaskForm(false)}
-          loading={loading}
+          loading={createTaskMutation.isPending}
         />
       )}
 
-      <div className="tasks-list">
-        {tasks.length === 0 ? (
-          <div className="empty-state">
-            <p>No tasks yet. Create your first task to get started!</p>
-          </div>
-        ) : (
+      {initialLoading ? (
+        <div className="loading-state">
+          <p>Loading tasks...</p>
+        </div>
+      ) : (
+        <div className="tasks-list">
+          {tasks.length === 0 ? (
+            <div className="empty-state">
+              <p>No tasks yet. Create your first task to get started!</p>
+            </div>
+          ) : (
           tasks.map((task) => (
             <div
               key={task.taskId}
@@ -143,7 +147,11 @@ export default function TasksList({ user }) {
                 )}
               </div>
               {task.description && (
-                <p className="task-description">{task.description}</p>
+                <p className="task-description" title={task.description}>
+                  {task.description.length > 160
+                    ? `${task.description.slice(0, 157)}...`
+                    : task.description}
+                </p>
               )}
               <div className="task-footer">
                 <span className="task-date">
@@ -152,8 +160,9 @@ export default function TasksList({ user }) {
               </div>
             </div>
           ))
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       <ConfirmModal
         isOpen={showDeleteTaskModal}
@@ -165,9 +174,8 @@ export default function TasksList({ user }) {
           setShowDeleteTaskModal(false);
           setTaskToDelete(null);
         }}
-        loading={loading}
+        loading={deleteTaskMutation.isPending}
       />
     </div>
   );
 }
-

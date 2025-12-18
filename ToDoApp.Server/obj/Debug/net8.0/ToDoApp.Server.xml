@@ -1,0 +1,130 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ToDoApp.Server</name>
+    </assembly>
+    <members>
+        <member name="M:ToDoApp.Server.Controllers.TasksController.GetTasks(System.Int32,System.Nullable{System.Int32},System.Nullable{System.Int32},System.String,System.String,System.String,System.Nullable{System.Boolean})">
+            <summary>
+            Gets all tasks for a user with optional pagination, sorting, and filtering.
+            </summary>
+            <param name="userId">User ID (required)</param>
+            <param name="pageNumber">Page number (1-based)</param>
+            <param name="pageSize">Page size (defaults to all, max 100)</param>
+            <param name="sortBy">Sort by `createdDate` (default), `name`, or `completedDate`</param>
+            <param name="sortDirection">Sort direction `asc` or `desc` (default)</param>
+            <param name="searchTerm">Case-insensitive search against task name/description</param>
+            <param name="completed">Filter by completion status (true = only completed, false = only active)</param>
+            <remarks>
+            Adds backend support for production concerns without breaking existing clients:
+            - Defaults to returning the full list if pagination parameters are omitted.
+            - Returns metadata (totalCount, hasMore) so the frontend can enable paging later.
+            - Validates inputs to return ProblemDetails instead of unhandled errors.
+            </remarks>
+        </member>
+        <member name="M:ToDoApp.Server.Controllers.TasksController.GetTask(System.Int32)">
+            <summary>
+            Gets a single task by ID with its subtasks.
+            </summary>
+            <param name="taskId">Task ID</param>
+            <returns>Task information with subtasks</returns>
+            <response code="404">Task not found for the provided ID</response>
+        </member>
+        <member name="M:ToDoApp.Server.Controllers.TasksController.CreateTask(ToDoApp.Server.DTOs.CreateTaskDto)">
+            <summary>
+            Creates a new task.
+            </summary>
+            <param name="dto">Task creation details</param>
+            <returns>Created task information</returns>
+            <response code="400">Validation errors with field-level details</response>
+        </member>
+        <member name="M:ToDoApp.Server.Controllers.TasksController.SaveTask(System.Int32,ToDoApp.Server.DTOs.UpdateTaskDto)">
+            <summary>
+            Updates an existing task.
+            </summary>
+            <param name="taskId">Task ID</param>
+            <param name="dto">Task update details</param>
+            <returns>Updated task information</returns>
+        </member>
+        <member name="M:ToDoApp.Server.Controllers.TasksController.DeleteTask(ToDoApp.Server.DTOs.DeleteTaskDto)">
+            <summary>
+            Deletes a task and its subtasks.
+            </summary>
+            <param name="dto">Task deletion details</param>
+            <returns>Deletion result</returns>
+        </member>
+        <member name="M:ToDoApp.Server.Controllers.TasksController.CreateSubtask(ToDoApp.Server.DTOs.CreateSubtaskDto)">
+            <summary>
+            Creates a new subtask.
+            </summary>
+            <param name="dto">Subtask creation details</param>
+            <returns>Created subtask information</returns>
+        </member>
+        <member name="M:ToDoApp.Server.Controllers.TasksController.SaveSubtask(System.Int32,ToDoApp.Server.DTOs.UpdateSubtaskDto)">
+            <summary>
+            Updates an existing subtask.
+            </summary>
+            <param name="subtaskId">Subtask ID</param>
+            <param name="dto">Subtask update details</param>
+            <returns>Updated subtask information</returns>
+        </member>
+        <member name="M:ToDoApp.Server.Controllers.TasksController.DeleteSubtask(ToDoApp.Server.DTOs.DeleteSubtaskDto)">
+            <summary>
+            Deletes a subtask.
+            </summary>
+            <param name="dto">Subtask deletion details</param>
+            <returns>Deletion result</returns>
+        </member>
+        <member name="M:ToDoApp.Server.Controllers.UsersController.Login(ToDoApp.Server.DTOs.LoginUserDto)">
+            <summary>
+            Logs in a user with username and password.
+            </summary>
+            <param name="dto">Login credentials</param>
+            <returns>User information</returns>
+            <remarks>
+            Placeholder for a future JWT/session implementation. On successful login, callers
+            receive the user record; production-ready auth would issue tokens here.
+            </remarks>
+        </member>
+        <member name="M:ToDoApp.Server.Controllers.UsersController.CreateUser(ToDoApp.Server.DTOs.CreateUserDto)">
+            <summary>
+            Creates a new user.
+            </summary>
+            <param name="dto">User creation details</param>
+            <returns>Created user information</returns>
+        </member>
+        <member name="T:ToDoApp.Server.Data.DatabaseInitializationExtensions">
+            <summary>
+            Centralizes database migrations and seeding so Program.cs stays lean and reusable.
+            </summary>
+        </member>
+        <member name="M:ToDoApp.Server.Data.DatabaseInitializationExtensions.ApplyMigrationsAndSeedAsync(Microsoft.AspNetCore.Builder.IApplicationBuilder)">
+            <summary>
+            Applies pending EF Core migrations and seeds initial data in a single bootstrapping step.
+            </summary>
+            <param name="app">Application builder</param>
+        </member>
+        <member name="P:ToDoApp.Server.DTOs.UpdateTaskDto.CompletedDateProvided">
+            <summary>
+            Indicates the client explicitly wants to update CompletedDate (including clearing it).
+            </summary>
+        </member>
+        <member name="T:ToDoApp.Server.Middleware.RequestResponseLoggingMiddleware">
+            <summary>
+            Logs inbound requests and outbound responses with correlation IDs for traceability.
+            </summary>
+        </member>
+        <member name="T:ToDoApp.Server.Migrations.InitialCreate">
+            <inheritdoc />
+        </member>
+        <member name="M:ToDoApp.Server.Migrations.InitialCreate.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:ToDoApp.Server.Migrations.InitialCreate.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:ToDoApp.Server.Migrations.InitialCreate.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

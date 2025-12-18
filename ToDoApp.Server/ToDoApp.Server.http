@@ -1,6 +1,208 @@
 @ToDoApp.Server_HostAddress = http://localhost:5180
+@ContentType = application/json
 
-GET {{ToDoApp.Server_HostAddress}}/weatherforecast/
-Accept: application/json
+### Variables
+# Update these after creating a user or task
+@UserId = 1
+@TaskId = 1
+@SubtaskId = 1
 
-###
+###############################################
+# USERS API
+###############################################
+
+### Login User
+# @name LoginUser
+POST {{ToDoApp.Server_HostAddress}}/api/users/login
+Content-Type: {{ContentType}}
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+### Create User
+# @name CreateUser
+POST {{ToDoApp.Server_HostAddress}}/api/users
+Content-Type: {{ContentType}}
+
+{
+  "role": 2,
+  "firstName": "John",
+  "lastName": "Doe",
+  "username": "johndoe",
+  "password": "password123",
+  "createdBy": 1
+}
+
+###############################################
+# TASKS API
+###############################################
+
+### Get All Tasks for User
+# @name GetTasks
+GET {{ToDoApp.Server_HostAddress}}/api/tasks/user/{{UserId}}
+Accept: {{ContentType}}
+
+### Get Paged/Filtered Tasks for User
+# @name GetTasksPaged
+GET {{ToDoApp.Server_HostAddress}}/api/tasks/user/{{UserId}}?pageNumber=1&pageSize=10&sortBy=createdDate&sortDirection=desc&searchTerm=project&completed=false
+Accept: {{ContentType}}
+
+### Get Single Task by ID
+# @name GetTask
+GET {{ToDoApp.Server_HostAddress}}/api/tasks/{{TaskId}}
+Accept: {{ContentType}}
+
+### Create Task
+# @name CreateTask
+POST {{ToDoApp.Server_HostAddress}}/api/tasks
+Content-Type: {{ContentType}}
+
+{
+  "userId": {{UserId}},
+  "taskName": "Complete project documentation",
+  "description": "Write comprehensive documentation for the ToDo app project",
+  "createdBy": {{UserId}}
+}
+
+### Update Task
+# @name UpdateTask
+PATCH {{ToDoApp.Server_HostAddress}}/api/tasks/{{TaskId}}
+Content-Type: {{ContentType}}
+
+{
+  "taskName": "Updated task name",
+  "description": "Updated description",
+  "completedDate": "2024-12-18T10:00:00Z"
+}
+
+### Mark Task as Complete
+# @name CompleteTask
+PATCH {{ToDoApp.Server_HostAddress}}/api/tasks/{{TaskId}}
+Content-Type: {{ContentType}}
+
+{
+  "completedDate": "2024-12-18T10:00:00Z"
+}
+
+### Mark Task as Incomplete
+# @name IncompleteTask
+PATCH {{ToDoApp.Server_HostAddress}}/api/tasks/{{TaskId}}
+Content-Type: {{ContentType}}
+
+{
+  "completedDate": null
+}
+
+### Delete Task
+# @name DeleteTask
+POST {{ToDoApp.Server_HostAddress}}/api/tasks/delete
+Content-Type: {{ContentType}}
+
+{
+  "taskId": {{TaskId}}
+}
+
+###############################################
+# SUBTASKS API
+###############################################
+
+### Create Subtask
+# @name CreateSubtask
+POST {{ToDoApp.Server_HostAddress}}/api/tasks/subtask
+Content-Type: {{ContentType}}
+
+{
+  "taskId": {{TaskId}},
+  "description": "Review code changes",
+  "createdBy": {{UserId}}
+}
+
+### Update Subtask
+# @name UpdateSubtask
+PATCH {{ToDoApp.Server_HostAddress}}/api/tasks/subtask/{{SubtaskId}}
+Content-Type: {{ContentType}}
+
+{
+  "description": "Updated subtask description",
+  "completedDate": "2024-12-18T11:00:00Z"
+}
+
+### Mark Subtask as Complete
+# @name CompleteSubtask
+PATCH {{ToDoApp.Server_HostAddress}}/api/tasks/subtask/{{SubtaskId}}
+Content-Type: {{ContentType}}
+
+{
+  "completedDate": "2024-12-18T11:00:00Z"
+}
+
+### Mark Subtask as Incomplete
+# @name IncompleteSubtask
+PATCH {{ToDoApp.Server_HostAddress}}/api/tasks/subtask/{{SubtaskId}}
+Content-Type: {{ContentType}}
+
+{
+  "completedDate": null
+}
+
+### Delete Subtask
+# @name DeleteSubtask
+POST {{ToDoApp.Server_HostAddress}}/api/tasks/subtask/delete
+Content-Type: {{ContentType}}
+
+{
+  "subtaskId": {{SubtaskId}}
+}
+
+###############################################
+# ERROR SCENARIOS (for testing validation)
+###############################################
+
+### Create Task - Invalid User ID
+POST {{ToDoApp.Server_HostAddress}}/api/tasks
+Content-Type: {{ContentType}}
+
+{
+  "userId": 99999,
+  "taskName": "Test Task",
+  "description": "This should fail",
+  "createdBy": 99999
+}
+
+### Create Task - Missing Required Fields
+POST {{ToDoApp.Server_HostAddress}}/api/tasks
+Content-Type: {{ContentType}}
+
+{
+  "userId": {{UserId}},
+  "taskName": "",
+  "description": "Task name is required"
+}
+
+### Get Task - Invalid Task ID
+GET {{ToDoApp.Server_HostAddress}}/api/tasks/99999
+Accept: {{ContentType}}
+
+### Login - Invalid Credentials
+POST {{ToDoApp.Server_HostAddress}}/api/users/login
+Content-Type: {{ContentType}}
+
+{
+  "username": "nonexistent",
+  "password": "wrongpassword"
+}
+
+### Create User - Duplicate Username
+POST {{ToDoApp.Server_HostAddress}}/api/users
+Content-Type: {{ContentType}}
+
+{
+  "role": 2,
+  "firstName": "Test",
+  "lastName": "User",
+  "username": "admin",
+  "password": "password123",
+  "createdBy": 1
+}

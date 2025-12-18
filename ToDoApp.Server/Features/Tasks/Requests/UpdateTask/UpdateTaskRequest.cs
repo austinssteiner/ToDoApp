@@ -8,6 +8,7 @@ public class UpdateTaskRequest : IRequest<UpdateTaskResponse>
     public string? TaskName { get; set; }
     public string? Description { get; set; }
     public DateTime? CompletedDate { get; set; }
+    public bool CompletedDateProvided { get; set; }
 }
 
 public class UpdateTaskResponse
@@ -19,4 +20,3 @@ public class UpdateTaskResponse
     public DateTime? CompletedDate { get; set; }
     public DateTime CreatedDate { get; set; }
 }
-

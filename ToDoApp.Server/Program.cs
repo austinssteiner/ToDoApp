@@ -1,12 +1,32 @@
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
-using ToDoApp.Server.Data;
+using System.IO;
 using System.Reflection;
+using System.Threading.RateLimiting;
+using ToDoApp.Server.Data;
+using ToDoApp.Server.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllers();
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+    {
+        var remoteIp = context.Connection.RemoteIpAddress?.ToString() ?? "anonymous";
+        return RateLimitPartition.GetFixedWindowLimiter(remoteIp, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 60,
+            Window = TimeSpan.FromMinutes(1),
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            QueueLimit = 10
+        });
+    });
+});
 
 // Add CORS
 builder.Services.AddCors(options =>
@@ -28,17 +48,20 @@ builder.Services.AddDbContext<ToDoAppDbContext>(options =>
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFilename);
+    if (File.Exists(xmlPath))
+    {
+        options.IncludeXmlComments(xmlPath);
+    }
+});
 
 var app = builder.Build();
 
-// Seed database
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    var context = services.GetRequiredService<ToDoAppDbContext>();
-    await ToDoApp.Server.Data.DatabaseSeeder.SeedAsync(context);
-}
+// Apply migrations and seed database via centralized helper
+await app.ApplyMigrationsAndSeedAsync();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
@@ -52,7 +75,14 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowReactApp");
 
+app.UseMiddleware<RequestResponseLoggingMiddleware>();
+
 app.UseHttpsRedirection();
+
+app.UseRateLimiter();
+
+// Add global exception handling middleware (must be early in pipeline)
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 app.UseAuthorization();
 
@@ -61,3 +91,6 @@ app.MapControllers();
 app.MapFallbackToFile("/index.html");
 
 app.Run();
+
+// Make Program accessible for testing
+public partial class Program { }

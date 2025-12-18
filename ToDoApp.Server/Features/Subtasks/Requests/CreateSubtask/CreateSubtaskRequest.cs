@@ -14,6 +14,7 @@ public class CreateSubtaskResponse
     public int SubtaskId { get; set; }
     public int TaskId { get; set; }
     public string Description { get; set; } = string.Empty;
+    public DateTime? CompletedDate { get; set; }
     public DateTime CreatedDate { get; set; }
 }
 

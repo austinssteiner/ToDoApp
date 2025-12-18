@@ -16,6 +16,7 @@ public class CreateTaskResponse
     public int UserId { get; set; }
     public string TaskName { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public DateTime? CompletedDate { get; set; }
     public DateTime CreatedDate { get; set; }
 }
 

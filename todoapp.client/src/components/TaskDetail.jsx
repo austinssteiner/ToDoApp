@@ -1,73 +1,62 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import TaskForm from './TaskForm';
 import ConfirmModal from './ConfirmModal';
 
 export default function TaskDetail({ task, user, onBack, onTaskUpdate, onTaskDelete }) {
-  const [subtasks, setSubtasks] = useState([]);
   const [showSubtaskForm, setShowSubtaskForm] = useState(false);
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [showDeleteTaskModal, setShowDeleteTaskModal] = useState(false);
   const [showDeleteSubtaskModal, setShowDeleteSubtaskModal] = useState(false);
   const [subtaskToDelete, setSubtaskToDelete] = useState(null);
   const [subtaskDescription, setSubtaskDescription] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const queryClient = useQueryClient();
 
-  // Load subtasks from localStorage
-  useEffect(() => {
-    const savedSubtasks = localStorage.getItem(`subtasks_${task.taskId}`);
-    if (savedSubtasks) {
-      setSubtasks(JSON.parse(savedSubtasks));
-    }
-  }, [task.taskId]);
+  // Fetch task with subtasks using React Query
+  const { data: taskData, error, isLoading: isLoadingTask } = useQuery({
+    queryKey: ['task', task.taskId],
+    queryFn: () => api.getTask(task.taskId),
+    initialData: task, // Use the passed task as initial data
+  });
 
-  const saveSubtasksToStorage = (newSubtasks) => {
-    setSubtasks(newSubtasks);
-    localStorage.setItem(`subtasks_${task.taskId}`, JSON.stringify(newSubtasks));
-  };
+  const subtasks = taskData?.subtasks || [];
 
-  const handleCreateSubtask = async (e) => {
-    e.preventDefault();
-    if (!subtaskDescription.trim()) return;
-
-    setError('');
-    setLoading(true);
-    try {
-      const newSubtask = await api.createSubtask({
-        taskId: task.taskId,
-        description: subtaskDescription.trim(),
-        createdBy: user.userId,
-      });
-
-      const updatedSubtasks = [...subtasks, newSubtask];
-      saveSubtasksToStorage(updatedSubtasks);
+  // Create subtask mutation
+  const createSubtaskMutation = useMutation({
+    mutationFn: (description) => api.createSubtask({
+      taskId: task.taskId,
+      description: description.trim(),
+      createdBy: user.userId,
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['task', task.taskId] });
       setSubtaskDescription('');
       setShowSubtaskForm(false);
-    } catch (err) {
-      setError(err.message || 'Failed to create subtask');
-    } finally {
-      setLoading(false);
-    }
+    },
+  });
+
+  const handleCreateSubtask = (e) => {
+    e.preventDefault();
+    if (!subtaskDescription.trim()) return;
+    createSubtaskMutation.mutate(subtaskDescription);
   };
 
-  const handleToggleSubtask = async (subtask) => {
-    setError('');
-    setLoading(true);
-    try {
-      const updatedSubtask = await api.updateSubtask(subtask.subtaskId, {
-        completedDate: subtask.completedDate ? null : new Date().toISOString(),
-      });
+  // Update subtask mutation
+  const updateSubtaskMutation = useMutation({
+    mutationFn: ({ subtaskId, completedDate }) => api.updateSubtask(subtaskId, {
+      completedDate: completedDate ? null : new Date().toISOString(),
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['task', task.taskId] });
+    },
+  });
 
-      const updatedSubtasks = subtasks.map(s =>
-        s.subtaskId === subtask.subtaskId ? updatedSubtask : s
-      );
-      saveSubtasksToStorage(updatedSubtasks);
-    } catch (err) {
-      setError(err.message || 'Failed to update subtask');
-    } finally {
-      setLoading(false);
-    }
+  const handleToggleSubtask = (subtask) => {
+    updateSubtaskMutation.mutate({
+      subtaskId: subtask.subtaskId,
+      completedDate: subtask.completedDate,
+    });
   };
 
   const handleDeleteSubtaskClick = (subtaskId) => {
@@ -75,51 +64,50 @@ export default function TaskDetail({ task, user, onBack, onTaskUpdate, onTaskDel
     setShowDeleteSubtaskModal(true);
   };
 
-  const handleConfirmDeleteSubtask = async () => {
-    if (!subtaskToDelete) return;
-
-    setError('');
-    setLoading(true);
-    try {
-      await api.deleteSubtask(subtaskToDelete);
-      const updatedSubtasks = subtasks.filter(s => s.subtaskId !== subtaskToDelete);
-      saveSubtasksToStorage(updatedSubtasks);
+  // Delete subtask mutation
+  const deleteSubtaskMutation = useMutation({
+    mutationFn: (subtaskId) => api.deleteSubtask(subtaskId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['task', task.taskId] });
       setShowDeleteSubtaskModal(false);
       setSubtaskToDelete(null);
-    } catch (err) {
-      setError(err.message || 'Failed to delete subtask');
-    } finally {
-      setLoading(false);
-    }
+    },
+  });
+
+  const handleConfirmDeleteSubtask = () => {
+    if (!subtaskToDelete) return;
+    deleteSubtaskMutation.mutate(subtaskToDelete);
   };
 
-  const handleTaskUpdate = async (taskData) => {
-    setError('');
-    setLoading(true);
-    try {
-      const updatedTask = await api.updateTask(task.taskId, taskData);
-      onTaskUpdate(updatedTask);
-      setShowTaskForm(false);
-    } catch (err) {
-      setError(err.message || 'Failed to update task');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleTaskComplete = async () => {
-    setError('');
-    setLoading(true);
-    try {
-      const updatedTask = await api.updateTask(task.taskId, {
-        completedDate: task.completedDate ? null : new Date().toISOString(),
+  // Update task mutation
+  const updateTaskMutation = useMutation({
+    mutationFn: (taskData) => api.updateTask(task.taskId, taskData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['task', task.taskId] });
+      queryClient.invalidateQueries({ queryKey: ['tasks', user.userId] });
+      // Refetch and update parent
+      queryClient.fetchQuery({
+        queryKey: ['task', task.taskId],
+        queryFn: () => api.getTask(task.taskId),
+      }).then((fetchedTask) => {
+        onTaskUpdate(fetchedTask);
       });
-      onTaskUpdate(updatedTask);
-    } catch (err) {
-      setError(err.message || 'Failed to update task');
-    } finally {
-      setLoading(false);
-    }
+      setShowTaskForm(false);
+    },
+  });
+
+  const handleTaskUpdate = (taskData) => {
+    updateTaskMutation.mutate({
+      ...taskData,
+      completedDateProvided: false,
+    });
+  };
+
+  const handleTaskComplete = () => {
+    updateTaskMutation.mutate({
+      completedDate: task.completedDate ? null : new Date().toISOString(),
+      completedDateProvided: true,
+    });
   };
 
   return (
@@ -141,25 +129,30 @@ export default function TaskDetail({ task, user, onBack, onTaskUpdate, onTaskDel
 
       {showTaskForm && (
         <TaskForm
-          initialTask={task}
+          initialTask={taskData || task}
           onSubmit={handleTaskUpdate}
           onCancel={() => setShowTaskForm(false)}
-          loading={loading}
+          loading={updateTaskMutation.isPending}
         />
       )}
 
-      <div className="task-detail-content">
-        <div className="task-detail-title">
-          <h1>{task.taskName}</h1>
-          {task.completedDate && (
-            <span className="task-completed-badge">✓ Completed</span>
-          )}
+      {isLoadingTask ? (
+        <div className="loading-state">
+          <p>Loading task details...</p>
         </div>
-        {task.description && (
-          <p className="task-detail-description">{task.description}</p>
-        )}
+      ) : (
+        <div className="task-detail-content">
+          <div className="task-detail-title">
+            <h1>{taskData?.taskName || task.taskName}</h1>
+            {(taskData?.completedDate || task.completedDate) && (
+              <span className="task-completed-badge">✓ Completed</span>
+            )}
+          </div>
+          {(taskData?.description || task.description) && (
+            <p className="task-detail-description">{taskData?.description || task.description}</p>
+          )}
 
-        <div className="subtasks-section">
+          <div className="subtasks-section">
           <div className="subtasks-header">
             <h2>Subtasks</h2>
             {!showSubtaskForm && (
@@ -192,14 +185,23 @@ export default function TaskDetail({ task, user, onBack, onTaskUpdate, onTaskDel
                 >
                   Cancel
                 </button>
-                <button type="submit" disabled={loading} className="btn-primary btn-small">
-                  {loading ? 'Adding...' : 'Add'}
+                <button type="submit" disabled={createSubtaskMutation.isPending} className="btn-primary btn-small">
+                  {createSubtaskMutation.isPending ? 'Adding...' : 'Add'}
                 </button>
               </div>
             </form>
           )}
 
-          {error && <div className="error-message">{error}</div>}
+          {(error || createSubtaskMutation.error || updateSubtaskMutation.error || deleteSubtaskMutation.error || updateTaskMutation.error) && (
+            <div className="error-message">
+              {error?.message || 
+               createSubtaskMutation.error?.message || 
+               updateSubtaskMutation.error?.message || 
+               deleteSubtaskMutation.error?.message || 
+               updateTaskMutation.error?.message || 
+               'An error occurred'}
+            </div>
+          )}
 
           <div className="subtasks-list">
             {subtasks.length === 0 ? (
@@ -215,14 +217,14 @@ export default function TaskDetail({ task, user, onBack, onTaskUpdate, onTaskDel
                       type="checkbox"
                       checked={!!subtask.completedDate}
                       onChange={() => handleToggleSubtask(subtask)}
-                      disabled={loading}
+                      disabled={updateSubtaskMutation.isPending}
                     />
                     <span>{subtask.description}</span>
                   </label>
                   <button
                     onClick={() => handleDeleteSubtaskClick(subtask.subtaskId)}
                     className="btn-icon"
-                    disabled={loading}
+                    disabled={deleteSubtaskMutation.isPending}
                   >
                     ×
                   </button>
@@ -231,7 +233,8 @@ export default function TaskDetail({ task, user, onBack, onTaskUpdate, onTaskDel
             )}
           </div>
         </div>
-      </div>
+        </div>
+      )}
 
       <ConfirmModal
         isOpen={showDeleteTaskModal}
@@ -243,7 +246,7 @@ export default function TaskDetail({ task, user, onBack, onTaskUpdate, onTaskDel
           onTaskDelete(task.taskId);
         }}
         onCancel={() => setShowDeleteTaskModal(false)}
-        loading={loading}
+        loading={updateTaskMutation.isPending}
       />
 
       <ConfirmModal
@@ -256,9 +259,8 @@ export default function TaskDetail({ task, user, onBack, onTaskUpdate, onTaskDel
           setShowDeleteSubtaskModal(false);
           setSubtaskToDelete(null);
         }}
-        loading={loading}
+        loading={deleteSubtaskMutation.isPending}
       />
     </div>
   );
 }
-

@@ -8,6 +8,9 @@ namespace ToDoApp.Server.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+/// <summary>
+/// User account endpoints (currently simple login/create; token issuing can be layered later).
+/// </summary>
 public class UsersController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -18,39 +21,37 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Logs in a user
+    /// Logs in a user with username and password.
     /// </summary>
     /// <param name="dto">Login credentials</param>
     /// <returns>User information</returns>
+    /// <remarks>
+    /// Placeholder for a future JWT/session implementation. On successful login, callers
+    /// receive the user record; production-ready auth would issue tokens here.
+    /// </remarks>
     [HttpPost("login")]
     [ProducesResponseType(typeof(LoginUserResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<LoginUserResponse>> Login([FromBody] LoginUserDto dto)
     {
-        try
+        if (!ModelState.IsValid)
         {
-            var request = new LoginUserRequest
-            {
-                Username = dto.Username,
-                Password = dto.Password
-            };
+            return BadRequest(ModelState);
+        }
 
-            var result = await _mediator.Send(request);
-            return Ok(result);
-        }
-        catch (InvalidOperationException ex)
+        var request = new LoginUserRequest
         {
-            return Unauthorized(new { error = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
+            Username = dto.Username,
+            Password = dto.Password
+        };
+
+        var result = await _mediator.Send(request);
+        return Ok(result);
     }
 
     /// <summary>
-    /// Creates a new user
+    /// Creates a new user.
     /// </summary>
     /// <param name="dto">User creation details</param>
     /// <returns>Created user information</returns>
@@ -59,25 +60,22 @@ public class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<CreateUserResponse>> CreateUser([FromBody] CreateUserDto dto)
     {
-        try
+        if (!ModelState.IsValid)
         {
-            var request = new CreateUserRequest
-            {
-                Role = dto.Role,
-                FirstName = dto.FirstName,
-                LastName = dto.LastName,
-                Username = dto.Username,
-                Password = dto.Password,
-                CreatedBy = dto.CreatedBy
-            };
+            return BadRequest(ModelState);
+        }
 
-            var result = await _mediator.Send(request);
-            return Ok(result);
-        }
-        catch (Exception ex)
+        var request = new CreateUserRequest
         {
-            return BadRequest(new { error = ex.Message });
-        }
+            Role = dto.Role,
+            FirstName = dto.FirstName,
+            LastName = dto.LastName,
+            Username = dto.Username,
+            Password = dto.Password,
+            CreatedBy = dto.CreatedBy
+        };
+
+        var result = await _mediator.Send(request);
+        return Ok(result);
     }
 }
-
