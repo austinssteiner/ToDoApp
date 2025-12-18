@@ -58,10 +58,6 @@ export default function SignIn({ onSignIn }) {
           <button type="submit" disabled={loading} className="btn-primary">
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
-          <div style={{ marginTop: '1rem', fontSize: '0.85rem', color: '#666', textAlign: 'center' }}>
-            <p>Default admin account:</p>
-            <p><strong>Username:</strong> admin | <strong>Password:</strong> admin123</p>
-          </div>
         </form>
       </div>
     </div>

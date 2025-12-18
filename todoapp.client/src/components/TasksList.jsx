@@ -50,13 +50,13 @@ export default function TasksList({ user }) {
     // Invalidate both task detail and tasks list queries
     queryClient.invalidateQueries({ queryKey: ['task', updatedTask.taskId] });
     queryClient.invalidateQueries({ queryKey: ['tasks', user.userId] });
-    
-    // Refetch the updated task to get latest data including subtasks
-    const fetchedTask = await queryClient.fetchQuery({
-      queryKey: ['task', updatedTask.taskId],
-      queryFn: () => api.getTask(updatedTask.taskId),
+
+    // Keep UI responsive by updating the selected task immediately;
+    // background refetch from invalidation will sync any server changes.
+    setSelectedTask((prev) => {
+      if (!prev || prev.taskId !== updatedTask.taskId) return prev;
+      return { ...prev, ...updatedTask };
     });
-    setSelectedTask(fetchedTask);
   };
 
   const handleTaskDeleteClick = (taskId) => {

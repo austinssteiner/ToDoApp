@@ -28,10 +28,8 @@ public class UpdateSubtaskHandler : IRequestHandler<UpdateSubtaskRequest, Update
             subtask.Description = request.Description;
         }
 
-        if (request.CompletedDate.HasValue)
-        {
-            subtask.CompletedDate = request.CompletedDate.Value;
-        }
+        // Allow toggling completion both ways (set timestamp or clear it)
+        subtask.CompletedDate = request.CompletedDate;
 
         await _context.SaveChangesAsync(cancellationToken);
 

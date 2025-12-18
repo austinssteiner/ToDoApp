@@ -44,18 +44,39 @@ export default function TaskDetail({ task, user, onBack, onTaskUpdate, onTaskDel
 
   // Update subtask mutation
   const updateSubtaskMutation = useMutation({
-    mutationFn: ({ subtaskId, completedDate }) => api.updateSubtask(subtaskId, {
-      completedDate: completedDate ? null : new Date().toISOString(),
-    }),
-    onSuccess: () => {
+    mutationFn: ({ subtaskId, completedDate }) =>
+      api.updateSubtask(subtaskId, { completedDate }),
+    onMutate: async ({ subtaskId, completedDate }) => {
+      await queryClient.cancelQueries({ queryKey: ['task', task.taskId] });
+      const previousTask = queryClient.getQueryData(['task', task.taskId]);
+
+      if (previousTask) {
+        const updated = {
+          ...previousTask,
+          subtasks: previousTask.subtasks.map((s) =>
+            s.subtaskId === subtaskId ? { ...s, completedDate } : s
+          ),
+        };
+        queryClient.setQueryData(['task', task.taskId], updated);
+      }
+
+      return { previousTask };
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previousTask) {
+        queryClient.setQueryData(['task', task.taskId], context.previousTask);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['task', task.taskId] });
     },
   });
 
   const handleToggleSubtask = (subtask) => {
+    const nextCompletedDate = subtask.completedDate ? null : new Date().toISOString();
     updateSubtaskMutation.mutate({
       subtaskId: subtask.subtaskId,
-      completedDate: subtask.completedDate,
+      completedDate: nextCompletedDate,
     });
   };
 

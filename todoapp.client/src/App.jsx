@@ -1,11 +1,27 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ErrorBoundary from './components/ErrorBoundary';
 import SignIn from './components/SignIn';
 import TasksList from './components/TasksList';
 import './App.css';
 
 function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('todoapp:user');
+      return stored ? JSON.parse(stored) : null;
+    } catch (err) {
+      console.error('Failed to read stored user', err);
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('todoapp:user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('todoapp:user');
+    }
+  }, [user]);
 
   const handleSignIn = (userData) => {
     setUser(userData);

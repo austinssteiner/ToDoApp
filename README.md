@@ -52,18 +52,18 @@ A full-stack task management application built with .NET Core (backend) and Reac
    start-all.bat
    ```
 
+### Default Credentials
+
+On first run, an admin account is automatically created:
+- **Username:** `admin`
+- **Password:** `admin123`
+
 ### Access the Application
 
 Once running:
 - **Frontend:** http://localhost:5173
 - **Backend API:** http://localhost:5180
 - **Swagger UI:** http://localhost:5180/swagger
-
-### Default Credentials
-
-On first run, an admin account is automatically created:
-- **Username:** `admin`
-- **Password:** `admin123`
 
 ## 🏗️ Architecture
 
