@@ -1,6 +1,6 @@
 # ToDo App - Full Stack Application 
 
-A full-stack task management application built with .NET Core (backend) and React (frontend). This application demonstrates clean architecture, proper separation of concerns, and production-ready patterns.
+A full-stack task management application built with .NET Core (backend) and React (frontend). This application demonstrates clean architecture and proper separation of concerns.
 
 ## Quick Start
 
@@ -104,14 +104,14 @@ On first run, an admin account is automatically created:
 
 ## Features
 
-- ✅ User authentication (login)
-- ✅ Task management (create, read, update, delete)
-- ✅ Subtask management
-- ✅ Task completion tracking
-- ✅ Real-time data synchronization
-- ✅ Responsive UI
+- User authentication (login)
+- Task management (create, read, update, delete)
+- Subtask management
+- Task completion tracking
+- Real-time data synchronization
+- Responsive UI
 
-## 🧪 Testing
+## Testing
 
 ### Running Tests
 
@@ -136,18 +136,12 @@ Once the backend is running, visit http://localhost:5180/swagger for interactive
 
 See `ToDoApp.Server/ToDoApp.Server.http` for example API requests that can be used with REST Client extensions in VS Code or Rider.
 
-### Task List Pagination, Sorting, and Filtering
-
-- `GET /api/tasks/user/{userId}` accepts optional query params: `pageNumber`, `pageSize` (max 100), `sortBy` (`createdDate`|`name`|`completedDate`), `sortDirection` (`asc`|`desc`), `searchTerm` (name/description), and `completed` (true/false).
-- Response includes `totalCount`, `pageNumber`, `pageSize`, and `hasMore` metadata to support paging without breaking existing clients.
-- Invalid parameters return ProblemDetails with clear error messages.
-
 ### Rate Limiting & Logging
 
 - Fixed-window rate limiting (60 requests/minute per remote IP with a small queue) returns HTTP 429 when exceeded.
 - Request/response logging middleware emits structured logs with correlation IDs for easier tracing in production.
 
-## 🔧 Database
+## Database
 
 ### Migrations
 
@@ -208,7 +202,7 @@ SQLite database file: `ToDoApp.Server/todoapp.db`
    - **Chosen:** CQRS pattern with MediatR
    - **Reason:** Better separation of concerns, easier to test, scalable architecture
 
-## 🚧 What Would Be Implemented Next
+## What Would Be Implemented Next
 
 If given more time, the following features would be prioritized:
 
@@ -276,11 +270,11 @@ If given more time, the following features would be prioritized:
     - Task sharing/collaboration
     - Export/import functionality
 
-## 📊 Scalability Considerations
+## Scalability Considerations
 
 ### Current Limitations
 
-1. **SQLite:** Not ideal for high-concurrency scenarios. Consider PostgreSQL for production.
+1. **SQLite:** Not ideal for high-concurrency scenarios. Consider PostgreSQL or SQL Server for production since SQLite does not have concurrent writes.
 2. **No caching layer:** Consider Redis for distributed caching.
 3. **No load balancing:** Single instance deployment.
 4. **No rate limiting:** API could be abused without rate limiting.
@@ -297,11 +291,11 @@ If given more time, the following features would be prioritized:
 
 ### Current Implementation
 
-- ✅ Password hashing (BCrypt)
-- ✅ Input validation on all DTOs
-- ✅ SQL injection protection (EF Core parameterized queries)
-- ✅ CORS configuration
-- ✅ Global error handling (prevents information leakage)
+- Password hashing (BCrypt)
+- Input validation on all DTOs
+- SQL injection protection (EF Core parameterized queries)
+- CORS configuration
+- Global error handling (prevents information leakage)
 
 ### Future Enhancements
 
